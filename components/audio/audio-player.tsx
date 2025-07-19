@@ -15,6 +15,7 @@ interface AudioPlayerProps {
   onTimeUpdate?: (time: number) => void
   onPlayingChange?: (playing: boolean) => void
   onDurationChange?: (duration: number) => void
+  onSeekReady?: (seekFn: (time: number) => void) => void
   loopStart?: number
   loopEnd?: number
   onLoopChange?: (start: number | null, end: number | null) => void
@@ -25,6 +26,7 @@ export function AudioPlayer({
   onTimeUpdate, 
   onPlayingChange,
   onDurationChange,
+  onSeekReady,
   loopStart,
   loopEnd,
   onLoopChange
@@ -173,6 +175,13 @@ export function AudioPlayer({
     setIsLooping(!!loopStart && !!loopEnd)
   }, [loopStart, loopEnd])
 
+  // Expose seek function to parent when ready
+  useEffect(() => {
+    if (onSeekReady && wavesurferRef.current && duration > 0) {
+      onSeekReady(handleSeek)
+    }
+  }, [onSeekReady, duration])
+
   const togglePlayPause = async () => {
     if (!wavesurferRef.current) return
 
@@ -192,6 +201,12 @@ export function AudioPlayer({
   const handleSkipForward = () => {
     const newTime = Math.min(duration, currentTime + 10)
     wavesurferRef.current?.seekTo(newTime / duration)
+  }
+
+  const handleSeek = (time: number) => {
+    if (!wavesurferRef.current || duration === 0) return
+    const normalizedTime = Math.max(0, Math.min(time, duration))
+    wavesurferRef.current.seekTo(normalizedTime / duration)
   }
 
   const handleVolumeChange = (value: number[]) => {

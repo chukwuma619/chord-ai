@@ -25,6 +25,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
   const [transpose, setTranspose] = useState(0)
   const [capoPosition, setCapoPosition] = useState(0)
   const [showSimplified, setShowSimplified] = useState(false)
+  const [seekFunction, setSeekFunction] = useState<((time: number) => void) | null>(null)
 
   // Transpose chords based on current settings
   const getTransposedChords = () => {
@@ -256,6 +257,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
             currentTime={currentTime}
             duration={duration}
             isPlaying={isPlaying}
+            onSeek={seekFunction || undefined}
           />
           
           {/* Audio Player */}
@@ -264,6 +266,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
             onTimeUpdate={setCurrentTime}
             onPlayingChange={setIsPlaying}
             onDurationChange={setDuration}
+            onSeekReady={setSeekFunction}
             loopStart={loopStart || undefined}
             loopEnd={loopEnd || undefined}
             onLoopChange={(start, end) => {
