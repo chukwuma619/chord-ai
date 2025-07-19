@@ -41,7 +41,6 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
   const [transpose, setTranspose] = useState(0)
   const [capoPosition, setCapoPosition] = useState(0)
   const [showSimplified, setShowSimplified] = useState(false)
-  const [seekFunction, setSeekFunction] = useState<((time: number) => void) | null>(null)
 
   // Transpose chords based on current settings
   const getTransposedChords = () => {
@@ -131,7 +130,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
     let line = ''
     let chordCount = 0
     
-    transposedChords.forEach((chord: any, index: number) => {
+    transposedChords.forEach((chord, index: number) => {
       line += chord.name.padEnd(8)
       chordCount++
       
@@ -143,7 +142,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
     })
     
     content += '\n--- Detailed Timeline ---\n\n'
-    transposedChords.forEach((chord: any) => {
+    transposedChords.forEach((chord) => {
       const startTime = `${Math.floor(chord.time / 60)}:${(Math.floor(chord.time) % 60).toString().padStart(2, '0')}`
       const endTime = `${Math.floor((chord.time + chord.duration) / 60)}:${(Math.floor(chord.time + chord.duration) % 60).toString().padStart(2, '0')}`
       content += `${chord.name.padEnd(8)} ${startTime} - ${endTime}\n`
@@ -209,7 +208,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
     if (navigator.share && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData)
-      } catch (err) {
+      } catch {
         console.log('Share cancelled')
       }
     } else {
@@ -271,9 +270,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
           <ChordTimeline 
             chords={transposedChords}
             currentTime={currentTime}
-            duration={duration}
             isPlaying={isPlaying}
-            onSeek={seekFunction || undefined}
           />
           
           {/* Audio Player */}
@@ -282,7 +279,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
             onTimeUpdate={setCurrentTime}
             onPlayingChange={setIsPlaying}
             onDurationChange={setDuration}
-            onSeekReady={setSeekFunction}
+
             loopStart={loopStart || undefined}
             loopEnd={loopEnd || undefined}
             onLoopChange={(start, end) => {
@@ -410,7 +407,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Chord Progression Details</h3>
             <div className="space-y-2">
-              {transposedChords.map((chord: any, index: number) => (
+              {transposedChords.map((chord, index: number) => (
                 <div 
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
@@ -448,14 +445,14 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
                 <div>
                   <span className="text-muted-foreground">Unique Chords:</span>
                   <span className="ml-2 font-medium">
-                    {new Set(transposedChords.map((c: any) => c.name)).size}
+                    {new Set(transposedChords.map((c) => c.name)).size}
                   </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Average Confidence:</span>
                   <span className="ml-2 font-medium">
                     {Math.round(
-                      transposedChords.reduce((acc: number, c: any) => acc + c.confidence, 0) / 
+                      transposedChords.reduce((acc: number, c) => acc + c.confidence, 0) / 
                       transposedChords.length * 100
                     )}%
                   </span>

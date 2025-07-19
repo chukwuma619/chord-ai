@@ -14,9 +14,7 @@ import { Music, Guitar, Piano, RotateCcw, Settings, Zap } from 'lucide-react'
 interface ChordTimelineProps {
   chords: Chord[]
   currentTime: number
-  duration: number
   isPlaying?: boolean
-  onSeek?: (time: number) => void
 }
 
 // Guitar Chord Diagram Component
@@ -236,7 +234,7 @@ function PianoChordDiagram({ chord, isActive = false }: { chord: PianoChordDiagr
   )
 }
 
-export function ChordTimeline({ chords, currentTime, duration, isPlaying = false, onSeek }: ChordTimelineProps) {
+export function ChordTimeline({ chords, currentTime, isPlaying = false }: ChordTimelineProps) {
   const [selectedInstrument, setSelectedInstrument] = useState<'guitar' | 'piano'>('guitar')
   const [showAnimated, setShowAnimated] = useState(true)
   const [showSummary, setShowSummary] = useState(false)

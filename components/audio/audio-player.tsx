@@ -52,18 +52,21 @@ export function AudioPlayer({
     // Create WaveSurfer instance with enhanced options
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: 'rgb(147, 51, 234)',
+      waveColor: 'rgba(147, 51, 234, 0.4)',
       progressColor: 'rgb(124, 58, 237)',
       cursorColor: 'rgb(239, 68, 68)',
-      barWidth: 2,
-      barRadius: 3,
-      height: 100,
+      cursorWidth: 2,
+      barWidth: 3,
+      barRadius: 2,
+      barGap: 1,
+      height: 120,
       normalize: true,
       backend: 'WebAudio',
       interact: true,
       dragToSeek: true,
       autoplay: false,
       hideScrollbar: false,
+      mediaControls: false,
       // Add CORS configuration
       fetchParams: {
         mode: 'cors',
@@ -157,8 +160,9 @@ export function AudioPlayer({
     return () => {
       console.log('Cleaning up WaveSurfer')
       wavesurfer.destroy()
-      if (loopIntervalRef.current) {
-        clearInterval(loopIntervalRef.current)
+      const intervalId = loopIntervalRef.current
+      if (intervalId) {
+        clearInterval(intervalId)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -252,16 +256,30 @@ export function AudioPlayer({
   return (
     <Card className="p-6 space-y-6">
       {/* Waveform Container */}
-      <div className="relative">
+      <div className="relative bg-muted/30 rounded-lg p-4 border">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-sm font-medium text-muted-foreground">Waveform</span>
+          <span className="text-xs text-muted-foreground">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+        </div>
         <div 
           ref={containerRef} 
-          className={`w-full ${isLoading ? 'opacity-50' : ''}`}
+          className={`w-full min-h-[120px] rounded ${isLoading ? 'opacity-50' : ''}`}
         />
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-              Loading audio...
+              Loading audio waveform...
+            </div>
+          </div>
+        )}
+        {!isLoading && duration === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <div className="text-sm">No audio loaded</div>
+              <div className="text-xs opacity-60">Waveform will appear here</div>
             </div>
           </div>
         )}

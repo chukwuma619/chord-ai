@@ -17,6 +17,12 @@ interface Analysis {
   audio_url: string
   youtube_url?: string
   created_at: string
+  chords?: Array<{
+    name: string
+    time: number
+    duration: number
+    confidence: number
+  }>
 }
 
 export default function SearchPage() {
@@ -134,7 +140,7 @@ export default function SearchPage() {
                           {analysis.filename}
                         </CardTitle>
                         <CardDescription>
-                          Key: {analysis.key} • {analysis.tempo} BPM • {analysis.chords.length} chords
+                          Key: {analysis.key} • {analysis.tempo} BPM • {analysis.chords?.length || 0} chords
                         </CardDescription>
                       </CardHeader>
                     </Card>
@@ -154,5 +160,4 @@ export default function SearchPage() {
       </div>
     </div>
   )
-} 
-} 
+}
