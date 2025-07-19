@@ -16,6 +16,13 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
+  // Fetch user profile
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
   // Fetch user's analyses from database
   const { data: analyses, error } = await supabase
     .from('analyses')
@@ -31,6 +38,8 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
     .limit(6)
 
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'User'
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
@@ -43,7 +52,7 @@ export default async function DashboardPage() {
           
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              {user.email}
+              {displayName}
             </span>
             <form action="/api/auth/logout" method="POST">
               <Button variant="ghost" size="sm" type="submit">
@@ -58,9 +67,9 @@ export default async function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome back{profile?.full_name ? `, ${profile.full_name}` : ''}!</h1>
           <p className="text-muted-foreground">
-            Upload a new song or browse your previous analyses
+            Upload a new song or browse your previous analyses - everything is free!
           </p>
         </div>
 
@@ -74,7 +83,7 @@ export default async function DashboardPage() {
                   Upload New Song
                 </CardTitle>
                 <CardDescription>
-                  Analyze a new audio file with AI
+                  Analyze a new audio file with AI - unlimited and free
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -93,7 +102,7 @@ export default async function DashboardPage() {
                   Search Songs
                 </CardTitle>
                 <CardDescription>
-                  Find chord progressions from our library
+                  Find chord progressions from our community library
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -141,7 +150,7 @@ export default async function DashboardPage() {
             <Card className="p-8 text-center">
               <FileMusic className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                No analyses yet. Upload your first song to get started!
+                No analyses yet. Upload your first song to get started - it's completely free!
               </p>
             </Card>
           )}

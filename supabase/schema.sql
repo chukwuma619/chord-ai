@@ -1,42 +1,43 @@
--- Create a storage bucket for audio files
+-- Create storage bucket for audio files
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('audio-files', 'audio-files', true);
 
--- Create a table for storing audio analyses
-CREATE TABLE IF NOT EXISTS public.analyses (
+-- Storage policies for audio files bucket
+CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'audio-files');
+CREATE POLICY "Authenticated users can upload" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'audio-files' AND auth.role() = 'authenticated');
+CREATE POLICY "Users can update own files" ON storage.objects FOR UPDATE USING (bucket_id = 'audio-files' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can delete own files" ON storage.objects FOR DELETE USING (bucket_id = 'audio-files' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Create analyses table
+CREATE TABLE analyses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   filename TEXT NOT NULL,
   key TEXT NOT NULL,
   tempo INTEGER NOT NULL,
   chords JSONB NOT NULL,
   audio_url TEXT NOT NULL,
-  user_id UUID REFERENCES auth.users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  youtube_url TEXT, -- URL of the YouTube video if analysis was from YouTube
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
--- Enable Row Level Security (RLS)
-ALTER TABLE public.analyses ENABLE ROW LEVEL SECURITY;
+-- Enable RLS
+ALTER TABLE analyses ENABLE ROW LEVEL SECURITY;
 
--- Create policies for the analyses table
--- Allow users to read all analyses (public access)
-CREATE POLICY "Allow public read access on analyses" ON public.analyses
-  FOR SELECT
-  USING (true);
+-- Analyses policies
+CREATE POLICY "Users can view their own analyses" ON analyses
+  FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
 
--- Allow authenticated users to create their own analyses
-CREATE POLICY "Allow authenticated users to create analyses" ON public.analyses
-  FOR INSERT
-  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+CREATE POLICY "Users can insert their own analyses" ON analyses
+  FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
--- Allow users to update their own analyses
-CREATE POLICY "Allow users to update own analyses" ON public.analyses
-  FOR UPDATE
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can update their own analyses" ON analyses
+  FOR UPDATE USING (auth.uid() = user_id);
 
--- Allow users to delete their own analyses
-CREATE POLICY "Allow users to delete own analyses" ON public.analyses
-  FOR DELETE
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own analyses" ON analyses
+  FOR DELETE USING (auth.uid() = user_id);
 
--- Create an index on created_at for better query performance
-CREATE INDEX idx_analyses_created_at ON public.analyses(created_at DESC); 
+-- Create indexes
+CREATE INDEX idx_analyses_user_id ON analyses(user_id);
+CREATE INDEX idx_analyses_created_at ON analyses(created_at DESC); 

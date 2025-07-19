@@ -12,8 +12,8 @@ export interface AudioAnalysis {
   tempo: number
   chords: Chord[]
   createdAt: Date
-  userId?: string
   audioUrl: string
+  youtubeUrl?: string // Optional YouTube URL
 }
 
 export interface UploadedFile {

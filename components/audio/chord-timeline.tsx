@@ -1,21 +1,48 @@
 "use client"
 
 import { useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Chord } from '@/lib/types'
-import { getChordColor, formatChordName } from '@/lib/music-theory'
+import { getChordColor, formatChordName, getChordDiagram } from '@/lib/music-theory'
+import { Music, Eye, EyeOff, Maximize2, Minimize2 } from 'lucide-react'
 
 interface ChordTimelineProps {
   chords: Chord[]
   currentTime: number
   duration: number
+  isPlaying?: boolean
 }
 
-export function ChordTimeline({ chords, currentTime, duration }: ChordTimelineProps) {
-  const [view, setView] = useState<'timeline' | 'piano' | 'guitar'>('timeline')
+export function ChordTimeline({ chords, currentTime, duration, isPlaying = false }: ChordTimelineProps) {
+  const [view, setView] = useState<'chords' | 'overview'>('chords')
+  const [showDiagrams, setShowDiagrams] = useState(true)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const timelineRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll timeline to keep current chord in view
+  useEffect(() => {
+    if (scrollRef.current && isPlaying) {
+      const currentChordIndex = chords.findIndex(
+        chord => currentTime >= chord.time && currentTime < chord.time + chord.duration
+      )
+      
+      if (currentChordIndex !== -1) {
+        const chordElement = scrollRef.current.children[currentChordIndex] as HTMLElement
+        if (chordElement) {
+          chordElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            inline: 'center',
+            block: 'nearest'
+          })
+        }
+      }
+    }
+  }, [currentTime, chords, isPlaying])
 
   const getCurrentChord = () => {
     return chords.find(
@@ -25,168 +52,192 @@ export function ChordTimeline({ chords, currentTime, duration }: ChordTimelinePr
 
   const currentChord = getCurrentChord()
 
-  // Timeline View
-  const TimelineView = () => (
-    <div className="relative h-32 bg-muted/20 rounded-lg overflow-hidden">
-      <div className="absolute inset-0 flex items-center">
+  // Chord Diagrams View (Chordify-style)
+  const ChordsView = () => (
+    <div className="relative">
+      {/* Chord strip with diagrams */}
+      <div 
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-4"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         {chords.map((chord, index) => {
-          const width = (chord.duration / duration) * 100
-          const left = (chord.time / duration) * 100
           const isActive = currentChord?.name === chord.name && 
                           currentTime >= chord.time && 
                           currentTime < chord.time + chord.duration
-
+          const isPast = currentTime > chord.time + chord.duration
+          
           return (
             <motion.div
-              key={`${chord.name}-${index}`}
-              className="absolute h-20 flex items-center justify-center"
-              style={{
-                left: `${left}%`,
-                width: `${width}%`,
-                backgroundColor: getChordColor(chord.name),
-                opacity: isActive ? 1 : 0.6,
-              }}
-              initial={{ scale: 1 }}
-              animate={{ scale: isActive ? 1.05 : 1 }}
-              transition={{ duration: 0.2 }}
+              key={`${chord.name}-${index}-${chord.time}`}
+              className={`flex-shrink-0 transition-all duration-300 ${
+                isActive ? 'scale-110' : ''
+              }`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
             >
-              <span className="text-white font-semibold text-sm">
-                {formatChordName(chord.name)}
-              </span>
+              <Card 
+                className={`p-4 transition-all duration-300 ${
+                  isActive 
+                    ? 'ring-2 ring-primary shadow-lg bg-primary/5' 
+                    : isPast 
+                      ? 'opacity-50' 
+                      : 'hover:shadow-md'
+                }`}
+              >
+                {showDiagrams ? (
+                  <div className="w-24 h-32 flex flex-col items-center justify-between">
+                    {/* Chord diagram placeholder */}
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="text-center">
+                        <Music className="h-12 w-12 text-muted-foreground mb-2" />
+                        <p className="text-xs text-muted-foreground">Diagram</p>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-bold text-lg">{formatChordName(chord.name)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {Math.round(chord.confidence * 100)}%
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 flex items-center justify-center">
+                    <p className="font-bold text-xl">{formatChordName(chord.name)}</p>
+                  </div>
+                )}
+              </Card>
             </motion.div>
           )
         })}
       </div>
-      
-      {/* Playhead */}
-      <div
-        className="absolute top-0 bottom-0 w-0.5 bg-red-500"
-        style={{ left: `${(currentTime / duration) * 100}%` }}
-      />
+
+      {/* Timeline progress bar */}
+      <div className="relative h-2 bg-muted mt-4 rounded-full overflow-hidden">
+        <motion.div
+          className="absolute left-0 top-0 h-full bg-primary rounded-full"
+          style={{ width: `${(currentTime / duration) * 100}%` }}
+          transition={{ duration: 0.1 }}
+        />
+        
+        {/* Chord markers */}
+        {chords.map((chord, index) => (
+          <div
+            key={`marker-${index}`}
+            className="absolute top-0 h-full w-px bg-border"
+            style={{ left: `${(chord.time / duration) * 100}%` }}
+          />
+        ))}
+      </div>
+
+      {/* Time markers */}
+      <div className="flex justify-between mt-1 px-1">
+        <span className="text-xs text-muted-foreground">0:00</span>
+        <span className="text-xs text-muted-foreground">
+          {Math.floor(duration / 60)}:{(Math.floor(duration) % 60).toString().padStart(2, '0')}
+        </span>
+      </div>
     </div>
   )
 
-  // Piano Roll View
-  const PianoView = () => {
-    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-    
-    return (
-      <div className="relative h-48 bg-muted/20 rounded-lg overflow-hidden">
-        <div className="absolute inset-0 flex flex-col">
-          {notes.reverse().map((note) => (
-            <div
-              key={note}
-              className="flex-1 border-b border-muted flex items-center"
+  // Overview mode (just chord names in a grid)
+  const OverviewMode = () => (
+    <div className="grid grid-cols-8 md:grid-cols-12 gap-2 p-4">
+      {chords.map((chord, index) => {
+        const isActive = currentChord?.name === chord.name && 
+                        currentTime >= chord.time && 
+                        currentTime < chord.time + chord.duration
+        
+        return (
+          <motion.div
+            key={`overview-${index}`}
+            className={`
+              p-3 rounded-lg text-center font-mono font-semibold transition-all
+              ${isActive 
+                ? 'bg-primary text-primary-foreground scale-110 shadow-lg' 
+                : 'bg-muted hover:bg-muted/80'
+              }
+            `}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.02 }}
+          >
+            {formatChordName(chord.name)}
+          </motion.div>
+        )
+      })}
+    </div>
+  )
+
+  return (
+    <Card className={`w-full ${isFullscreen ? 'fixed inset-0 z-50' : ''}`} ref={containerRef}>
+      <div className="p-6">
+        {/* Header with controls */}
+        <div className="flex items-center justify-between mb-4">
+          <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-auto">
+            <TabsList>
+              <TabsTrigger value="chords">Chord View</TabsTrigger>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          <div className="flex items-center gap-2">
+            {view === 'chords' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDiagrams(!showDiagrams)}
+              >
+                {showDiagrams ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                <span className="ml-2 hidden sm:inline">
+                  {showDiagrams ? 'Hide' : 'Show'} Diagrams
+                </span>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFullscreen(!isFullscreen)}
             >
-              <div className="w-12 px-2 text-xs font-medium">
-                {note}
-              </div>
-              <div className="flex-1 relative">
-                {chords.map((chord, index) => {
-                  if (!chord.name.startsWith(note)) return null
-                  
-                  const width = (chord.duration / duration) * 100
-                  const left = (chord.time / duration) * 100
-                  const isActive = currentChord?.name === chord.name && 
-                                  currentTime >= chord.time && 
-                                  currentTime < chord.time + chord.duration
-
-                  return (
-                    <motion.div
-                      key={`${chord.name}-${index}`}
-                      className="absolute h-3 rounded"
-                      style={{
-                        left: `${left}%`,
-                        width: `${width}%`,
-                        backgroundColor: getChordColor(chord.name),
-                        opacity: isActive ? 1 : 0.6,
-                        top: '50%',
-                        transform: 'translateY(-50%)'
-                      }}
-                      initial={{ scale: 1 }}
-                      animate={{ scale: isActive ? 1.1 : 1 }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
         
-        {/* Playhead */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 bg-red-500"
-          style={{ left: `calc(48px + ${(currentTime / duration) * (100 - 48 / timelineRef.current?.offsetWidth * 100)}%)` }}
-        />
-      </div>
-    )
-  }
-
-  // Guitar Tab View (simplified)
-  const GuitarView = () => {
-    const strings = ['E', 'B', 'G', 'D', 'A', 'E']
-    
-    return (
-      <div className="relative h-48 bg-muted/20 rounded-lg overflow-hidden p-4">
-        <div className="absolute inset-4 flex flex-col justify-between">
-          {strings.map((string, idx) => (
-            <div key={idx} className="h-0.5 bg-muted-foreground/30" />
-          ))}
-        </div>
+        <TabsContent value="chords" className="mt-0">
+          <ChordsView />
+        </TabsContent>
         
-        <div className="relative h-full flex items-center justify-center">
+        <TabsContent value="overview" className="mt-0">
+          <OverviewMode />
+        </TabsContent>
+        
+        {/* Current chord display */}
+        <AnimatePresence mode="wait">
           {currentChord && (
             <motion.div
               key={currentChord.name}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-4xl font-bold"
-              style={{ color: getChordColor(currentChord.name) }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-6 text-center p-4 bg-muted/30 rounded-lg"
             >
-              {formatChordName(currentChord.name)}
+              <p className="text-sm text-muted-foreground mb-1">Now Playing</p>
+              <p className="text-3xl font-bold" style={{ color: getChordColor(currentChord.name) }}>
+                {formatChordName(currentChord.name)}
+              </p>
+              <div className="flex items-center justify-center gap-4 mt-2">
+                <span className="text-sm text-muted-foreground">
+                  Confidence: {Math.round(currentChord.confidence * 100)}%
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Duration: {currentChord.duration.toFixed(1)}s
+                </span>
+              </div>
             </motion.div>
           )}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <Card className="p-6 w-full">
-      <Tabs value={view} onValueChange={(v) => setView(v as any)}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="piano">Piano Roll</TabsTrigger>
-          <TabsTrigger value="guitar">Guitar Tab</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="timeline" className="mt-4">
-          <div ref={timelineRef}>
-            <TimelineView />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="piano" className="mt-4">
-          <PianoView />
-        </TabsContent>
-        
-        <TabsContent value="guitar" className="mt-4">
-          <GuitarView />
-        </TabsContent>
-      </Tabs>
-      
-      {/* Current chord display */}
-      <div className="mt-4 text-center">
-        <p className="text-sm text-muted-foreground">Current Chord</p>
-        <p className="text-2xl font-bold" style={{ color: currentChord ? getChordColor(currentChord.name) : undefined }}>
-          {currentChord ? formatChordName(currentChord.name) : '-'}
-        </p>
-        {currentChord && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Confidence: {Math.round(currentChord.confidence * 100)}%
-          </p>
-        )}
+        </AnimatePresence>
       </div>
     </Card>
   )
