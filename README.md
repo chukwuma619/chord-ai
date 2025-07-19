@@ -32,8 +32,8 @@ A modern web application for detecting chord progressions in audio files using A
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/chord-progression-ai.git
-cd chord-progression-ai
+git clone https://github.com/yourusername/chord-ai.git
+cd chord-ai
 ```
 
 ### 2. Install dependencies
@@ -83,7 +83,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 ## Project Structure
 
 ```
-chord-progression-ai/
+chord-ai/
 ├── app/                    # Next.js app directory
 │   ├── (auth)/            # Authentication pages
 │   ├── (dashboard)/       # Protected dashboard pages
