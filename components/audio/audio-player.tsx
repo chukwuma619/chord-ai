@@ -161,7 +161,8 @@ export function AudioPlayer({
         clearInterval(loopIntervalRef.current)
       }
     }
-  }, [audioUrl, onTimeUpdate, onPlayingChange, onDurationChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioUrl])
 
   // Handle playback rate changes
   useEffect(() => {
@@ -180,6 +181,7 @@ export function AudioPlayer({
     if (onSeekReady && wavesurferRef.current && duration > 0) {
       onSeekReady(handleSeek)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSeekReady, duration])
 
   const togglePlayPause = async () => {

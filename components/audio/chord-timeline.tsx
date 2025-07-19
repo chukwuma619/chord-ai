@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
 import { Badge } from '@/components/ui/badge'
 import { Chord } from '@/lib/types'
-import { getChordColor, formatChordName, getChordDiagram, getPianoChordDiagram, simplifyChord } from '@/lib/music-theory'
+import { formatChordName, getChordDiagram, getPianoChordDiagram, simplifyChord } from '@/lib/music-theory'
 import type { ChordDiagram, PianoChordDiagram } from '@/lib/music-theory'
 import { Music, Guitar, Piano, RotateCcw, Settings, Zap } from 'lucide-react'
 
@@ -128,8 +128,6 @@ function GuitarChordDiagram({ chord, isActive = false }: { chord: ChordDiagram; 
 // Piano Chord Diagram Component
 function PianoChordDiagram({ chord, isActive = false }: { chord: PianoChordDiagram; isActive?: boolean }) {
   const whiteKeys = [0, 2, 4, 5, 7, 9, 11] // C, D, E, F, G, A, B
-  const blackKeys = [1, 3, 6, 8, 10] // C#, D#, F#, G#, A#
-  const keyNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
   
   const isKeyPressed = (keyIndex: number) => chord.keys.includes(keyIndex)
   
@@ -137,7 +135,7 @@ function PianoChordDiagram({ chord, isActive = false }: { chord: PianoChordDiagr
     <div className={`relative w-32 h-20 ${isActive ? 'scale-110' : ''} transition-transform duration-200`}>
       {/* White keys */}
       <div className="flex absolute bottom-0 left-0 right-0">
-        {whiteKeys.map((keyIndex, position) => (
+        {whiteKeys.map((keyIndex) => (
           <div
             key={`white-${keyIndex}`}
             className={`flex-1 h-16 border border-gray-400 ${
@@ -243,7 +241,6 @@ export function ChordTimeline({ chords, currentTime, duration, isPlaying = false
   const [showAnimated, setShowAnimated] = useState(true)
   const [showSummary, setShowSummary] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const progressRef = useRef<HTMLDivElement>(null)
 
   // Auto-scroll timeline to keep current chord in view
   useEffect(() => {
@@ -272,19 +269,6 @@ export function ChordTimeline({ chords, currentTime, duration, isPlaying = false
   }
 
   const currentChord = getCurrentChord()
-  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0
-
-  // Handle timeline click for seeking
-  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current || !onSeek) return
-    
-    const rect = progressRef.current.getBoundingClientRect()
-    const clickX = e.clientX - rect.left
-    const percentage = clickX / rect.width
-    const seekTime = percentage * duration
-    
-    onSeek(Math.max(0, Math.min(seekTime, duration)))
-  }
 
   // Get unique chords for summary view
   const uniqueChords = Array.from(new Set(chords.map(c => simplifyChord(c.name))))

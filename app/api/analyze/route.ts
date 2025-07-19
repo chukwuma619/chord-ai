@@ -159,7 +159,7 @@ async function processYouTubeVideo(youtubeUrl: string): Promise<{
       const infoCommand = `yt-dlp --get-title "${youtubeUrl}"`;
       const { stdout: titleOutput } = await execAsync(infoCommand);
       videoTitle = titleOutput.trim().replace(/[^\w\s-]/g, '').substring(0, 100);
-    } catch (error) {
+    } catch {
       console.log('Could not get video title, using default');
     }
 
@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Store analysis in database
-      const { data: dbData, error: dbError } = await supabase
+      const { error: dbError } = await supabase
         .from('analyses')
         .insert({
           id: analysis.id,
@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Store analysis in database
-      const { data: dbData, error: dbError } = await supabase
+      const { error: dbError } = await supabase
         .from('analyses')
         .insert({
           id: analysis.id,

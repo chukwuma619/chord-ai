@@ -35,7 +35,7 @@ export default function LoginPage() {
         router.push("/dashboard")
         router.refresh()
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred")
     } finally {
       setLoading(false)
@@ -54,7 +54,7 @@ export default function LoginPage() {
       if (error) {
         toast.error(error.message)
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred")
     }
   }
@@ -149,7 +149,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="text-center text-sm">
           <p className="text-muted-foreground">
-            Don't have an account?{" "}
+                            Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-primary hover:underline">
               Sign up
             </Link>

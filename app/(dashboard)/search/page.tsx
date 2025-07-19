@@ -3,27 +3,28 @@
 import { useState, useEffect } from 'react'
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
+
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Music, ArrowLeft, Search, FileMusic, Clock, Loader2 } from "lucide-react"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 
+interface Analysis {
+  id: string
+  filename: string
+  key: string
+  tempo: number
+  audio_url: string
+  youtube_url?: string
+  created_at: string
+}
+
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<Analysis[]>([])
   const [loading, setLoading] = useState(false)
   const debouncedSearch = useDebounce(searchQuery, 500)
   const supabase = createClient()
-
-  useEffect(() => {
-    if (debouncedSearch) {
-      performSearch(debouncedSearch)
-    } else {
-      // Show recent analyses when no search query
-      loadRecentAnalyses()
-    }
-  }, [debouncedSearch])
 
   const performSearch = async (query: string) => {
     setLoading(true)
@@ -34,35 +35,42 @@ export default function SearchPage() {
         .ilike('filename', `%${query}%`)
         .order('created_at', { ascending: false })
         .limit(20)
-
-      if (!error && data) {
-        setResults(data)
-      }
+      
+      if (error) throw error
+      setResults(data || [])
     } catch (error) {
       console.error('Search error:', error)
+      setResults([])
     } finally {
       setLoading(false)
     }
   }
 
   const loadRecentAnalyses = async () => {
-    setLoading(true)
     try {
       const { data, error } = await supabase
         .from('analyses')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20)
-
-      if (!error && data) {
-        setResults(data)
-      }
+        .limit(10)
+      
+      if (error) throw error
+      setResults(data || [])
     } catch (error) {
-      console.error('Load error:', error)
-    } finally {
-      setLoading(false)
+      console.error('Load recent analyses error:', error)
+      setResults([])
     }
   }
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      performSearch(debouncedSearch)
+    } else {
+      // Show recent analyses when no search query
+      loadRecentAnalyses()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -146,4 +154,5 @@ export default function SearchPage() {
       </div>
     </div>
   )
+} 
 } 

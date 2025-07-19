@@ -8,7 +8,7 @@ export class AudioAnalyzer {
   private sampleRate: number
 
   constructor() {
-    this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    this.audioContext = new (window.AudioContext || (window as Window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
     this.analyser = this.audioContext.createAnalyser()
     this.analyser.fftSize = 4096
     this.dataArray = new Uint8Array(this.analyser.frequencyBinCount)
@@ -39,7 +39,7 @@ export class AudioAnalyzer {
     let best_correlation = 0
     let rms = 0
     let foundGoodCorrelation = false
-    let correlations = new Array(MAX_SAMPLES)
+    const correlations = new Array(MAX_SAMPLES)
 
     // Calculate RMS (root mean square) for volume detection
     for (let i = 0; i < SIZE; i++) {
@@ -86,18 +86,7 @@ export class AudioAnalyzer {
 
   // Detect chords based on frequency spectrum
   private detectChord(frequencies: number[]): string {
-    // Common chord patterns (intervals in semitones)
-    const chordPatterns: { [key: string]: number[] } = {
-      'major': [0, 4, 7],
-      'minor': [0, 3, 7],
-      '7': [0, 4, 7, 10],
-      'maj7': [0, 4, 7, 11],
-      'm7': [0, 3, 7, 10],
-      'dim': [0, 3, 6],
-      'aug': [0, 4, 8],
-      'sus2': [0, 2, 7],
-      'sus4': [0, 5, 7]
-    }
+    // Simplified chord detection - just return a basic chord for now
 
     // Get the strongest frequencies and convert to notes
     const notes = frequencies

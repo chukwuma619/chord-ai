@@ -49,7 +49,7 @@ export default function SignupPage() {
         toast.success("Check your email to confirm your account!")
         router.push("/login")
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred")
     } finally {
       setLoading(false)
@@ -68,7 +68,7 @@ export default function SignupPage() {
       if (error) {
         toast.error(error.message)
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred")
     }
   }

@@ -14,19 +14,13 @@ import { Music, ArrowLeft, FileMusic, Sparkles, Upload, Youtube, Link as LinkIco
 import { AudioAnalysis } from '@/lib/types'
 
 export default function UploadPage() {
-  const [analysis, setAnalysis] = useState<AudioAnalysis | null>(null)
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
   const router = useRouter()
 
   const handleAnalysisComplete = (newAnalysis: AudioAnalysis) => {
-    setAnalysis(newAnalysis)
     // Redirect to preview page after successful analysis
     router.push(`/preview/${newAnalysis.id}`)
-  }
-
-  const handleYouTubeAnalysis = () => {
-    toast.info('YouTube analysis is not yet implemented. Please upload an audio file instead.')
   }
 
   const handleYoutubeSubmit = async (e: React.FormEvent) => {

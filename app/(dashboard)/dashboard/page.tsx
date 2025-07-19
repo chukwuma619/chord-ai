@@ -24,7 +24,7 @@ export default async function DashboardPage() {
     .single()
 
   // Fetch user's analyses from database
-  const { data: analyses, error } = await supabase
+  const { data: analyses } = await supabase
     .from('analyses')
     .select('*')
     .eq('user_id', user.id)
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
             <Card className="p-8 text-center">
               <FileMusic className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                No analyses yet. Upload your first song to get started - it's completely free!
+                No analyses yet. Upload your first song to get started - it&apos;s completely free!
               </p>
             </Card>
           )}

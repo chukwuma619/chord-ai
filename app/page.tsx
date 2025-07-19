@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Music, Upload, Youtube, Play, Zap, Users, Heart, Star, ArrowRight, CheckCircle } from "lucide-react"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Music, Upload, Youtube, Play, Zap, Heart, ArrowRight, CheckCircle } from "lucide-react"
 
 export default function LandingPage() {
   return (

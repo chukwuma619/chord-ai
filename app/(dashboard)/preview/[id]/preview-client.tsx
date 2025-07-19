@@ -12,8 +12,24 @@ import { transposeChord, simplifyChord } from '@/lib/music-theory'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 
+interface Analysis {
+  id: string
+  filename: string
+  key: string
+  tempo: number
+  chords: Array<{
+    name: string
+    time: number
+    duration: number
+    confidence: number
+  }>
+  audio_url: string
+  youtube_url?: string
+  created_at: string
+}
+
 interface PreviewClientProps {
-  analysis: any // Using any for now, should match database schema
+  analysis: Analysis
 }
 
 export function PreviewClient({ analysis }: PreviewClientProps) {
@@ -32,7 +48,7 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
     const totalTranspose = transpose - capoPosition
     if (totalTranspose === 0 && !showSimplified) return analysis.chords
     
-    return analysis.chords.map((chord: any) => {
+    return analysis.chords.map((chord) => {
       let chordName = chord.name
       
       // Apply transposition if needed
@@ -56,14 +72,14 @@ export function PreviewClient({ analysis }: PreviewClientProps) {
 
   const handleChordClick = (chordTime: number) => {
     // Seek to chord position when clicked
-    const seekPosition = chordTime / duration
     // This would need to be connected to the audio player's seek function
+    console.log('Seeking to:', chordTime)
   }
 
   const handleLoopSelection = () => {
     // Find current chord boundaries for loop points
     const currentChord = transposedChords.find(
-      (chord: any) => currentTime >= chord.time && currentTime < chord.time + chord.duration
+      (chord) => currentTime >= chord.time && currentTime < chord.time + chord.duration
     )
     
     if (currentChord && !loopStart) {
